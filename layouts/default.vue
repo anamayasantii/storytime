@@ -4,11 +4,11 @@
       <div class="container mx-auto flex justify-between items-center px-4">
         <!-- Logo -->
         <div class="flex items-center">
-          <img
-            src="../assets/images/image 15.png"
-            alt="Logo"
-            class="h-10 w-auto"
-          />
+          <NuxtLink to="/">
+            <div>
+            <img src="../assets/images/image 15.png" alt="Logo" class="h-10 w-auto">
+            </div>
+          </NuxtLink>
         </div>
         <AuthMenu />
       </div>

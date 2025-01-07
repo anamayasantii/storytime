@@ -1,20 +1,30 @@
 <template>
   <div class="header__auth flex justify-start items-center">
     <!-- Tombol Register -->
-     <NuxtLink to="/SignupPage">
+     <NuxtLink v-if="!isLoggedIn" to="/SignupPage">
       <button class="btn btn-register">
         Sign Up
       </button>
     </NuxtLink>
 
-    <NuxtLink to="/LoginPage">
+    <NuxtLink v-if="!isLoggedIn" to="/LoginPage">
     <!-- Tombol Login -->
     <button class="btn btn-login">
       Login
     </button>
   </NuxtLink>
+  <ProfileMenu v-if="isLoggedIn"/>
   </div>
 </template>
+
+<script setup>
+import ProfileMenu from './ProfileMenu.vue';
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+
+const store = useStore();
+const isLoggedIn = computed(() => store.state.auth.isLogin); // Ambil status login dari Vuex
+</script>
 
 <style scoped>
 .btn {

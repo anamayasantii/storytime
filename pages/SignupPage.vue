@@ -28,7 +28,7 @@
     <div class="right flex items-center justify-center p-6">
       <div class="w-full max-w-md">
         <h1 class="text-3xl font-bold mb-4">Create Account</h1>
-        <form class="space-y-3">
+        <form @submit.prevent="register" class="space-y-3">
           <base-input
             type="text"
             identity="name"
@@ -92,12 +92,12 @@
 
           <base-input
             type="password"
-            identity="confirmationPassword"
+            identity="confirm_password"
             label="Confirm Password"
             placeholder="Re-enter your chosen password"
             class="w-full p-2"
-            v-model="signupData.confirmationPassword"
-            @input="confirmationPasswordCheck"
+            v-model="signupData.confirm_password"
+            @input="confirm_passwordCheck"
           ></base-input>
 
           <p
@@ -116,12 +116,9 @@
             Password dan Konfirmasi Password cocok
           </p>
 
-          <button
-            type="submit"
-            class="button text-white py-2 ms-2 rounded hover:bg-green-700"
-          >
+          <base-button class="button text-white py-2 ms-2 rounded hover:bg-green-700">
             Create Account
-          </button>
+          </base-button>
           <p class="text-sm mt-2 ms-2">
             Already have an account?
             <NuxtLink to="/LoginPage"><a href="#" class="login hover:underline">Login</a></NuxtLink>
@@ -133,7 +130,12 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref } from 'vue';
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
+
+const store = useStore();
+const router = useRouter();
 
 definePageMeta({
   layout: "AuthPage",
@@ -144,7 +146,7 @@ const signupData = reactive({
   username: "",
   email: "",
   password: "",
-  confirmationPassword: "",
+  confirm_password: "", // Pastikan ini sesuai dengan backend
 });
 
 const passwordMessages = reactive({
@@ -171,26 +173,29 @@ const passwordCheck = () => {
   passwordMessages.symbol = /[0-9!@#$%^&*(),.?":{}|<>]/.test(password) ? "none" : "block";
 };
 
-const confirmationPasswordCheck = () => {
-  if (signupData.confirmationPassword === "") {
+const confirm_passwordCheck = () => {
+  const { password, confirm_password } = signupData;
+
+  if (confirm_password === "") {
     confirmPasswordDoesNotMatch.value = "none";
     confirmPasswordMatch.value = "none";
     return;
   }
 
-  if (signupData.password !== signupData.confirmationPassword) {
-    confirmPasswordDoesNotMatch.value = "block";
-    confirmPasswordMatch.value = "none";
+  if (password !== confirm_password) {
+    confirmPasswordDoesNotMatch.value = "block"; // Tampilkan pesan jika tidak cocok
+    confirmPasswordMatch.value = "none"; // Sembunyikan pesan cocok
     return;
   }
 
-  confirmPasswordDoesNotMatch.value = "none";
-  confirmPasswordMatch.value = "block";
+  confirmPasswordDoesNotMatch.value = "none"; // Sembunyikan pesan tidak cocok
+  confirmPasswordMatch.value = "block"; // Tampilkan pesan cocok
 };
 
 const register = async () => {
   console.log({ signupData });
 
+  // Periksa validasi password
   if (
     passwordMessages.length === "block" ||
     passwordMessages.capital === "block" ||
@@ -200,16 +205,26 @@ const register = async () => {
     return;
   }
 
-  if (signupData.password !== signupData.confirmationPassword) {
+  // Periksa kesesuaian antara password dan konfirmasi
+  if (signupData.password !== signupData.confirm_password) {
     alert("Password dan Konfirmasi Password tidak cocok");
-    signupData.password = "";
-    signupData.confirmationPassword = "";
+    signupData.password = ""; // Reset field jika tidak cocok
+    signupData.confirm_password = ""; // Reset field jika tidak cocok
     return;
   }
 
-  alert("Registrasi berhasil");
+  // Tangkap hasil dari aksi pendaftaran
+  const result = await store.dispatch("auth/getRegisterData", signupData);
+
+  if (result) {
+    alert("Registrasi berhasil");
+    router.push("/");
+  } else {
+    alert("Gagal melakukan registrasi");
+  }
 };
 </script>
+
 
 <style scoped>
 .left {
