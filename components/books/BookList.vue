@@ -1,13 +1,15 @@
 <template>
-<div class="flex-shrink-0 max-w-sm bg-white overflow-hidden overflow-fix dark:bg-gray-800">
+<div class="flex-shrink-0 max-w-sm bg-white overflow-hidden overflow-fix dark:bg-gray-800" v-for="story in stories" :key="story.id">
   <!-- Gambar Card -->
-  <div class="relative" v-for="story in stories" :key="story.id">
-    <img class="w-full h-auto rounded-t-xl object-cover" 
-    :src="story.cover" 
-    :alt="story.title">
-    <div
-        class="absolute right-8 bottom-8 rounded-full h-12 w-12 flex items-center justify-center bg-gray-asparagus">
-        <img class="h-65 w-65 p-2 overflow-hidden" src="@/assets/images/bookmarkicon.png" alt="">
+  <div class="relative">
+    <div class="relative">
+      <img class="w-full h-auto rounded-t-xl object-cover" 
+      :src="story.cover" 
+      :alt="story.title">
+      <div
+          class="absolute right-8 bottom-8 rounded-full h-12 w-12 flex items-center justify-center bg-gray-asparagus">
+          <img class="h-65 w-65 p-2 overflow-hidden" src="@/assets/images/bookmarkicon.png" alt="">
+      </div>
     </div>
 
   <!-- Konten Card -->
@@ -23,21 +25,21 @@
     </p>
 
     <!-- Informasi Tambahan -->
-    <!-- <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-      <div class="flex items-center space-x-2">
+    <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+      <div class="flex items-center space-x-2 flex-shrink-0">
         <img
           class="w-6 h-6 rounded-full"
-          src="@/assets/images/profile.png"
-          alt="lia">
-        <span>LIAK</span>
+          :src="`http://localhost:8000${story.author_image}`"
+          :alt="story.author_name">
+        <span>{{ story.author_name }}</span>
       </div>
 
-      <span>13 March 2024</span>
+      <span class="flex-shrink-0">{{ formatDate(story.created_at) }}</span>
 
-      <span class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-300">
-        Comedy
+      <span class="category flex-shrink-0 px-2 py-1 text-xs font-medium rounded-md">
+        {{ story.category }}
       </span>
-    </div> -->
+    </div> 
 
   </div>
   </div>
@@ -46,9 +48,20 @@
 
 <script setup>
 defineProps({
-    stories: Array
-})
+    stories: {
+      type:  Array,
+      required: true,
+    },
+});
 
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+}
 </script>
 
 <style scope>
@@ -57,5 +70,9 @@ defineProps({
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.category {
+  background-color: #f0f5ed;
+  color: #466543;
 }
 </style>

@@ -29,14 +29,14 @@
           class="w-6 h-6 rounded-full"
           src="@/assets/images/profile.png"
           alt="Author Avatar">
-        <span>Khrisvana (updated) 1</span>
+        <span>Baek Hyun-woo</span>
       </div>
 
       <!-- Tanggal -->
       <span>12 March 2024</span>
 
       <!-- Genre -->
-      <span class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-300">
+      <span class="category px-2 py-1 text-xs font-medium rounded-md">
         Comedy
       </span>
     </div>
@@ -73,14 +73,14 @@
           class="w-6 h-6 rounded-full"
           src="@/assets/images/profile.png"
           alt="Author Avatar">
-        <span>Khrisvana (updated) 1</span>
+        <span>Baek Hyun-woo</span>
       </div>
 
       <!-- Tanggal -->
       <span>12 March 2024</span>
 
       <!-- Genre -->
-      <span class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-300">
+      <span class="category px-2 py-1 text-xs font-medium rounded-md">
         Comedy
       </span>
     </div>
@@ -117,17 +117,24 @@
           class="w-6 h-6 rounded-full"
           src="@/assets/images/profile.png"
           alt="Author Avatar">
-        <span>Khrisvana (updated) 1</span>
+        <span>Baek Hyun-woo</span>
       </div>
 
       <!-- Tanggal -->
       <span>12 March 2024</span>
 
       <!-- Genre -->
-      <span class="px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-300">
+      <span class="category px-2 py-1 text-xs font-medium rounded-md">
         Comedy
       </span>
     </div>
   </div>
 </div>
 </template>
+
+<style>
+.category {
+  background-color: #f0f5ed;
+  color: #466543;
+}
+</style>

@@ -135,7 +135,7 @@
             return;
           }
 
-          const { data } = await axios.get(`${baseUrl}users-id`, {
+          const { data } = await axios.get(`${baseUrl}users`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           console.log("Respone Backenddddddddddddddddd", data);

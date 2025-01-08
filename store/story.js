@@ -25,9 +25,9 @@ export default {
         );
     
         console.log("API Response:", data); // Log data API
-        commit("setStoryData", data);
+        commit("setStoryData", data.data);
       } catch (err) {
-        console.error(err);
+        console.error("Error in Vuex Action:", err);
       }
     },    
   },

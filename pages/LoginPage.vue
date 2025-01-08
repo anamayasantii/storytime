@@ -16,8 +16,8 @@
             label="Email/Username"
             placeholder="Enter your email or username"
             class="w-full p-2"
-            v-model="loginData.identifier"
-          ></base-input>
+            v-model="loginData.identifier">
+          </base-input>
 
           <base-input
             type="password"

@@ -2,14 +2,16 @@
   <div class="w-full flex flex-col h-full">
     <!-- Bagian Atas -->
     <div
-      class="bgprofile flex items-center justify-between h-1/3 bg-gray-200 p-4 mb-6">
+      class="bgprofile flex items-center justify-space-between h-1/3 bg-gray-200 p-4 mb-6">
       <div
-        class="flex items-center justify-between p-6 mx-auto max-w-5xl rounded-lg">
-        <img
-          class="w-20 h-20 rounded-full object-cover"
-          :src="userData.image || previewImage"
-          alt="Profile Picture"
-        />
+        class="flex items-center justify-space-between p-6 mx-auto max-w-5xl rounded-lg">
+        <div>
+          <img
+            class="w-20 h-20 rounded-full object-cover"
+            :src="`http://localhost:8000${userData.image || previewImage}`"
+              alt="Profile Picture"
+          />
+        </div>
 
         <div class="flex-1 px-6" v-if="userData.username">
           <h1 class="text-xl font-bold">{{ userData.username }}</h1>
@@ -145,7 +147,7 @@
           <!-- Profile Picture Section -->
           <div class="flex items-center space-x-4">
             <img
-              :src="userData.image || previewImage"
+              :src="`http://localhost:8000${userData.image || previewImage}`"
               alt="Profile Picture"
               class="profile-pic"
             />
@@ -266,6 +268,8 @@ onMounted(async () => {
   }
 });
 
+console.log('Image URL:', `http://localhost:8000${userData.image}`);
+console.log('userData:', userData);
 
 const updateProfile = async () => {
   try {

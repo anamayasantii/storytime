@@ -3,7 +3,8 @@
     <!-- Profile Picture dan Username -->
     <div class="profile-info flex items-center space-x-2">
       <!-- Cek apakah ada avatar dan tampilkan gambar jika ada -->
-      <img v-if="userData.image" :src="userData.image" alt="Profile Picture" class="w-8 h-8 rounded-full object-cover" />
+      <img v-if="userData.image" :src="`http://localhost:8000${userData.image || previewImage}`"
+      alt="Profile Picture" class="w-8 h-8 rounded-full object-cover" />
       <i v-else class="fa-solid fa-user text-blue-600"></i> <!-- Icon default jika tidak ada avatar -->
       <ul class="navbar-nav">
         <li class="nav-item dropdown relative">

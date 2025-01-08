@@ -20,10 +20,10 @@
       <!-- Author -->
       <div class="flex items-center space-x-2">
         <img
-          class="w-6 h-6 rounded-full"
+          class="w-10 h-10 rounded-full"
           src="@/assets/images/profile.png"
           alt="Author Avatar">
-        <span>Khrisvana (updated) 1</span>
+        <span>Baek Hyun-woo</span>
       </div>
 
       <!-- Tanggal -->
