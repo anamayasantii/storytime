@@ -1,24 +1,21 @@
 <template>
-<div class="flex-shrink-0 max-w-sm bg-white overflow-hidden overflow-fix dark:bg-gray-800">
-  <!-- Gambar Card -->
-  <div class="relative">
+    <div class="bg-white overflow-hidden overflow-fix dark:bg-gray-800">
+    <!-- Gambar Card -->
     <div class="relative">
-      <NuxtLink :to="`/story/${story.id}`">
-      <div :class="size === 'special' ? 'h-[700px]' : 'h-[350px]'" 
+      <div :class="size === 'special' ? 'w-[800px]' : 'h-[350px] w-full'" 
             class="rounded-t-md overflow-hidden">
-        <img class="w-full h-full object-cover" 
-        :src="story.cover" 
-        :alt="story.title">
-      </div>
-    </NuxtLink>
+          <img class="w-full h-full object-cover" 
+          :src="story.cover" 
+          :alt="story.title">
+        </div>
       <div
           class="absolute right-8 bottom-8 rounded-full flex items-center justify-center bg-gray-asparagus">
           <img class="bookmark p-2 overflow-hidden" src="@/assets/images/before_bookmark.png" alt="">
       </div>
-    </div>
+  </div>
 
   <!-- Konten Card -->
-    <div>
+  <div>
     <!-- Judul -->
     <h5 class="mb-2 text-xl font-bold text-left text-gray-800 dark:text-white">
       {{ story.title }}
@@ -31,7 +28,8 @@
 
     <!-- Informasi Tambahan -->
     <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-      <div class="flex items-center space-x-2 flex-shrink-0">
+      <!-- Author -->
+      <div class="flex items-center space-x-2">
         <img
           class="w-6 h-6 rounded-full"
           :src="`http://localhost:8000${story.author_image}`"
@@ -39,21 +37,22 @@
         <span>{{ story.author_name }}</span>
       </div>
 
-      <span class="flex-shrink-0">{{ formatDate(story.created_at) }}</span>
+      <!-- Tanggal -->
+      <span>{{ formatDate(story.created_at) }}</span>
 
-      <span class="category flex-shrink-0 px-2 py-1 text-xs font-medium rounded-md">
-        {{ story.category }}  
-      </span>
-    </div> 
-
-  </div>
+      <!-- Genre -->
+      <!-- <span class="category px-2 py-1 text-xs font-medium rounded-md">
+        {{ story.category_name }}
+      </span> -->
+    </div>
   </div>
 </div>
 </template>
 
 <script setup>
 defineProps({
-    story: Object
+    story: Object,
+    size: String, // Pastikan ada properti size
 });
 
 function formatDate(dateString) {
@@ -66,13 +65,7 @@ function formatDate(dateString) {
 }
 </script>
 
-<style scope>
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+<style>
 .category {
   background-color: #f0f5ed;
   color: #466543;

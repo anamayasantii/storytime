@@ -87,20 +87,6 @@
             class="w-64 h-auto"
           />
         </div>
-        <div class="flex justify-center mb-4">
-          <img
-            src="@/assets/images/vectorprofile.svg"
-            alt="Centered Image"
-            class="w-64 h-auto"
-          />
-        </div>
-        <div class="flex justify-center mb-4">
-          <img
-            src="@/assets/images/vectorprofile.svg"
-            alt="Centered Image"
-            class="w-64 h-auto"
-          />
-        </div>
       </div>
 
       <div
@@ -112,20 +98,6 @@
           You haven't saved any bookmarks yet. Explore and bookmark your top
           workouts!
         </p>
-        <div class="flex justify-center mb-4">
-          <img
-            src="@/assets/images/vectorbookmark.svg"
-            alt="Centered Image"
-            class="w-64 h-auto"
-          />
-        </div>
-        <div class="flex justify-center mb-4">
-          <img
-            src="@/assets/images/vectorbookmark.svg"
-            alt="Centered Image"
-            class="w-64 h-auto"
-          />
-        </div>
         <div class="flex justify-center mb-4">
           <img
             src="@/assets/images/vectorbookmark.svg"

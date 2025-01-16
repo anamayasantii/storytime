@@ -4,7 +4,7 @@
     <div class="right flex items-center justify-center p-6">
       <NuxtLink to="/">
         <div class="absolute top-4 left-8 p-4">
-          <img src="@/assets/images/image 15.png" alt="Logo" width="50%" />
+          <img src="@/assets/images/logo.png" alt="Logo" width="15%" />
         </div>
       </NuxtLink>
       <div class="w-full max-w-md">

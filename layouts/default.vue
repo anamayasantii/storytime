@@ -6,7 +6,7 @@
         <div class="flex items-center">
           <NuxtLink to="/">
             <div>
-            <img src="../assets/images/image 15.png" alt="Logo" class="h-10 w-auto">
+            <img src="../assets/images/logo.png" alt="Logo" class="h-10 w-auto">
             </div>
           </NuxtLink>
         </div>

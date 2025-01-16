@@ -1,7 +1,7 @@
 <template>
 <div class="flex space-x-7 w-full">
     <!-- Card 1 -->
-    <div class="flex-1 bg-white rounded-lg min-w-[32%]">
+    <div class="flex-1 bg-white rounded-t-md min-w-[32%]">
       <img src="@/assets/images/bookcover.jpg" alt="Image 1" class="rounded-t-lg w-full h-auto">
       <div class="p-4">
         <div>

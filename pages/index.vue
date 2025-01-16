@@ -27,94 +27,75 @@
       <div
         class="ml-20 mr-20 flex justify-between items-center border-b border-gray-300 py-4">
         <h2 class="text-2xl font-serif font-bold">Latest Story</h2>
-        <NuxtLink to="AllBooks" class="text-gray-600 hover:text-black flex items-center">
+        <NuxtLink
+          to="AllStories"
+          class="text-gray-600 hover:text-black flex items-center">
           Explore More →
         </NuxtLink>
       </div>
 
-      <!-- Book List Section -->
-      <div class="overflow-x-scroll scrollbar-hide flex gap-6 mt-10">
-        <div class="shrink-0 w-12"></div>
-        <BookList v-if="storyListStatus" :stories="storyList" />
-        <div class="shrink-0 w-12"></div>
+      <!-- Book List Section -->  
+      <div class="overflow-x-scroll scrollbar-hide flex gap-6 mt-10 px-20">
+        <!-- Card list di-loop di dalam container -->
+        <div v-for="story in storyList.slice(0,5)" :key="story.id" class="shrink-0">
+          <BookList :story="story" />
+        </div>
       </div>
+
     </div>
 
     <div class="w-full max-w-screen-xl mx-auto mt-20">
-      <!-- Comedy Story Section -->
-      <div
-        class="ml-20 mr-20 flex justify-between items-center border-b border-gray-300 py-4">
-        <h2 class="text-2xl font-serif font-bold">Comedy</h2>
-        <NuxtLink to="AllBooks" class="text-gray-600 hover:text-black flex items-center">
-          Explore More →
-        </NuxtLink>
-      </div>
-
-      <!-- Book List Section -->
-      <div class="container mx-auto px-20 grid grid-cols-3 gap-4 mt-5">
-        <!-- Grid Pertama dan Kedua (Merged) -->
-        <div class="col-span-2 rounded-lg">
-          <ListBottom />
+      <!-- Kategori Story Section -->
+      <div v-for="category in categories" :key="category?.category_name" class="mt-20">
+        <!-- Header kategori -->
+        <div
+          class="ml-20 mr-20 flex justify-between items-center border-b border-gray-300 py-4">
+          <h2 class="text-2xl font-serif font-bold">
+            {{ category?.category_name ?? "-" }}
+          </h2>
+          <NuxtLink
+            :to="{ name: 'AllStories', query: { category: category.category_name } }"
+            class="text-gray-600 hover:text-black flex items-center">
+            Explore More →
+          </NuxtLink>
         </div>
 
-        <!-- Grid Ketiga (2 Cards Vertikal) -->
-        <div class="grid grid-rows-2 gap-4">
-          <!-- Card Atas -->
-          <div class="rounded-lg">
-            <ListBottom />
+        <!-- Kondisi Layout Berdasarkan Kategori -->
+        <!-- Layout Kedua untuk Romance dan Comedy -->
+        <div
+          v-if="category.category_name === 'Romance' || category.category_name === 'Comedy'"
+          class="container mx-auto px-20 grid grid-cols-3 gap-4 mt-5"
+        >
+          <!-- Grid Pertama dan Kedua (Merged) -->
+          <div class="col-span-2 rounded-lg">
+            <div v-for="(story, index) in category.stories.slice(0, 1)" :key="index">
+              <BookCategory :story="story" :size="'special'" />
+            </div>
           </div>
 
-          <!-- Card Bawah -->
-          <div class="rounded-lg">
-            <ListBottom />
+          <!-- Grid Ketiga (2 Cards Vertikal) -->
+          <div class="grid grid-rows-2 gap-4">
+            <div class="rounded-lg">
+              <div v-for="(story, index) in category.stories.slice(1, 2)" :key="index">
+                <BookCategory :story="story" />
+              </div>
+            </div>
+
+            <div class="rounded-lg">
+              <div v-for="(story, index) in category.stories.slice(2, 3)" :key="index">
+                <BookCategory :story="story" />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="w-full max-w-screen-xl mx-auto">
-      <!-- Romance Story Section -->
-      <div
-        class="ml-20 mr-20 flex justify-between items-center border-b border-gray-300 py-4">
-        <h2 class="text-2xl font-serif font-bold">Romance</h2>
-        <NuxtLink to="AllBooks" class="text-gray-600 hover:text-black flex items-center">
-          Explore More →
-        </NuxtLink>
-      </div>
-
-      <!-- Book List Section -->
-      <div class="flex gap-6 mt-10 ml-20 mr-20 justify-between">
-        <BookRomance />
-      </div>
-    </div>
-
-    <div class="w-full max-w-screen-xl mx-auto mt-20">
-      <!-- Horror Story Section -->
-      <div
-        class="ml-20 mr-20 flex justify-between items-center border-b border-gray-300 py-4">
-        <h2 class="text-2xl font-serif font-bold">Horror</h2>
-        <NuxtLink to="AllBooks" class="text-gray-600 hover:text-black flex items-center">
-          Explore More →
-        </NuxtLink>
-      </div>
-
-      <!-- Book List Section -->
-      <div class="container mx-auto px-20 grid grid-cols-3 gap-4 mt-5">
-        <!-- Grid Pertama dan Kedua (Merged) -->
-        <div class="col-span-2 rounded-lg">
-          <ListBottom />
-        </div>
-
-        <!-- Grid Ketiga (2 Cards Vertikal) -->
-        <div class="grid grid-rows-2 gap-4">
-          <!-- Card Atas -->
-          <div class="rounded-lg">
-            <ListBottom />
-          </div>
-
-          <!-- Card Bawah -->
-          <div class="rounded-lg">
-            <ListBottom />
+        <!-- Layout Pertama untuk Horror -->
+        <div 
+          v-else-if="category.category_name === 'Horror'" 
+          class="flex gap-6 mt-10 ml-20 mr-20 justify-between"
+        >
+          <div v-for="story in category.stories" :key="story.id">
+            <BookCategory :story="story" />
           </div>
         </div>
       </div>
@@ -128,31 +109,10 @@
         </div>
 
         <!-- Categories Section -->
-        <div
-          class="ml-20 mr-20 mt-6 mb-20 grid grid-cols-3 sm:grid-cols-7 gap-4">
-          <button
+        <div class="ml-20 mr-20 mt-6 mb-20 grid grid-cols-3 sm:grid-cols-7 gap-4">
+          <button v-for="category in categoriesData" :key="category.id"
             class="btn-category font-medium py-10 px-6 text-center rounded-lg">
-            Adventure
-          </button>
-          <button
-            class="btn-category font-medium py-10 px-6 text-center rounded-lg">
-            Fiction
-          </button>
-          <button
-            class="btn-category font-medium py-10 px-6 text-center rounded-lg">
-            Fantasy
-          </button>
-          <button
-            class="btn-category font-medium py-10 px-6 text-center rounded-lg">
-            Drama
-          </button>
-          <button
-            class="btn-category font-medium py-10 px-6 text-center rounded-lg">
-            Heartfelt
-          </button>
-          <button
-            class="btn-category font-medium py-10 px-6 text-center rounded-lg">
-            Mystery
+            {{ category.name }}
           </button>
         </div>
       </div>
@@ -163,24 +123,48 @@
 <script setup>
 import { IconSearch } from "@tabler/icons-vue";
 import BookList from "~/components/books/BookList.vue";
-import BookRomance from "~/components/books/BookRomance.vue";
-import ListBottom from "~/components/books/ListBottom.vue";
 import { onMounted, ref, computed } from "vue";
 import { useStore } from "vuex";
+import BookCategory from "~/components/books/BookCategory.vue";
 
 const isLoggedIn = computed(() => store.state.auth.isLogin); // Ambil status login dari Vuex
 const store = useStore();
-const storyListStatus = ref(false);
-const storyList = ref();
-console.log("STORY LISTTTTTTTTTTTTTTTTT:", storyList.value);
 
-console.log("HELO");
+const storyList = ref([]);
+const categories = ref([]);
+const categoriesData = ref([]);
 
 onMounted(async () => {
   try {
-    await store.dispatch("story/getStoryData");
-    storyListStatus.value = true;
-    storyList.value = store.state.story.stories;
+    const result = await store.dispatch("story/getStoryByCategory");
+    categories.value = result.filter(
+      (category) =>
+        category.category_name === "Horror" ||
+        category.category_name === "Romance" ||
+        category.category_name === "Comedy"
+    );
+
+    console.log(categories.value, " dddd dddd dddd dddd dddddd");
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+onMounted(async () => {
+  try {
+    const result = await store.dispatch("story/getCategoryData");
+    categoriesData.value = result;
+    console.log(categoriesData.value, "INI DATA KATEGORI AJAAAAAAAAAAAAAAAAAAAAAAAAA");
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+onMounted(async () => {
+  try {
+    const result = await store.dispatch("story/getStoryData");
+    storyList.value = result;
+    console.log(storyList.value, "INI DATA STORY NEWESTTTTTTT AJAAAAAAAAAAAAAAAAAAAAAAAAA");
   } catch (error) {
     console.log(error);
   }
@@ -199,6 +183,15 @@ onMounted(async () => {
     console.error("Failed to fetch user data:", error);
   }
 });
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+}
 </script>
 
 <style scoped>
@@ -230,5 +223,13 @@ input {
 .btn-category {
   background-color: #f0f5ed;
   color: #466543;
+}
+
+.category {
+  background-color: #f0f5ed;
+  color: #466543;
+}
+.bookmark {
+  width: 65px;
 }
 </style>
