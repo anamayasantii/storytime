@@ -2,148 +2,213 @@
   <div class="flex flex-col items-center justify-center mt-7">
     <div class="flex display-flex w-full px-4 md:px-20 py-5">
       <h1 class="text-4xl font-playFair mb-5 font-bold">
-        {{ selectedCategory && selectedCategory !== '' ? selectedCategory : 'All Story' }}
+        {{
+            searchQuery
+              ? `${filteredStories.length} results for '${searchQuery}'`
+              : selectedCategory
+                ? selectedCategory
+                : "All Stories"
+          }}
       </h1>
     </div>
 
+    <!-- Breadcrumb -->
     <div class="highlight w-full">
       <p class="mb-6 w-3/4 md:w-7/10 font-playFair px-4 md:px-20 mt-5">
-        <span class="mr-2">Home</span>
-        <span class="mx-2">/</span>
-        <span class="ml-2">
-          {{ selectedCategory && selectedCategory !== '' ? selectedCategory : 'All Story' }}
+        <NuxtLink to="/"><span class="home mr-2">Home</span></NuxtLink>
+        <span class="slash mx-2">/</span>
+        <span class="slash ml-2">
+          {{ searchQuery ? "Search Result" : selectedCategory ? selectedCategory : "All Stories" }}
         </span>
       </p>
     </div>
-    
+
+    <!-- Filter & Search Bar -->
     <div class="flex justify-between w-full px-4 md:px-20 py-5">
       <div class="flex justify-between w-1/3">
+        <!-- Sort Dropdown -->
         <div class="flex items-center gap-2">
           <label for="sort-by">Sort By</label>
-          <select class="font-bold border-none outline-none focus:ring-0" id="sort-by">
-            <option value="newest">Newest</option>
-            <option value="popular">Popular</option>
-            <option value="a-z">A-Z</option>
-            <option value="z-a">Z-A</option>
+          <select v-model="sortByWithOrder" @change="updateSorting" class="font-bold border-none outline-none focus:ring-0">
+            <option value="created_at-desc">Newest</option>
+            <option value="created_at-asc">Oldest</option>
+            <option value="title-asc">A-Z</option>
+            <option value="title-desc">Z-A</option>
+            <option value="bookmarks_count-desc">Popular</option>
           </select>
         </div>
-        
+
+        <!-- Category Dropdown -->
         <div class="flex items-center gap-2">
           <label for="category">Category</label>
-          <select class="font-bold border-none outline-none focus:ring-0" id="category" v-model="selectedCategory">
-            <option value="">All</option>
-            <option 
-              v-for="category in categoriesData" 
-              :key="category.id"
-              :value="category.name">
+          <select
+            v-model="selectedCategory"
+            class="font-bold border-none outline-none focus:ring-0"
+            id="category"
+          >
+            <option value="">All Category</option>
+            <option v-for="category in categoriesData" :key="category.id" :value="category.name">
               {{ category.name }}
             </option>
           </select>
         </div>
       </div>
 
+      <!-- Search Bar -->
       <div class="search-bar flex justify-between w-1/3 border border-gray-300 rounded-lg p-2">
         <input
-            type="text"
-            placeholder="Search story"
-            class="flex-1 border-none outline-none p-2"/>
-        <IconSearch class="text-gray-400 cursor-pointer" />
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search story..."
+          class="flex-1 border-none outline-none p-2"
+          @keyup.enter="updateSearchQuery"
+        />
+        <IconSearch class="text-gray-400 cursor-pointer" @click="updateSearchQuery" />
       </div>
     </div>
 
+    <!-- Book List -->
     <div class="w-full max-w-screen-xl mx-auto">
-      <!-- Book List Section -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10 mr-20 ml-20">
-        <div v-for="story in filteredStories" :key="story.id">
+        <div v-for="story in paginatedStories" :key="story.id">
           <BookList :story="story" />
         </div>
       </div>
     </div>
 
-    <div class="w-full max-w-screen-xl mx-auto text-left mt-20">
-      <div class="w-full max-w-screen-xl mx-auto text-left">
-        <div class="flex justify-center space-x-2 mt-6 mb-20">
-          <button
-            class="pagination font-medium px-4 py-2 rounded-lg">
-            1
-          </button>
-          <button
-            class="pagination font-medium px-4 py-2 rounded-lg">
-            2
-          </button>
-          <button
-            class="pagination font-medium px-4 py-2 rounded-lg">
-            3
-          </button>
-          <div class="pagination font-medium px-4 py-2 rounded-lg">...</div>
-          <button
-            class="pagination font-medium px-4 py-2 rounded-lg">
-            10
-          </button>
-          <button
-            class="pagination font-medium px-4 py-2 rounded-lg">
-            Next
-          </button>
-        </div>
-      </div>
+    <!-- Pagination -->
+    <div class="flex justify-center space-x-2 mt-6 mb-20">
+      <button
+        v-for="page in totalPages"
+        :key="page"
+        @click="currentPage = page"
+        :class="['pagination font-medium px-4 py-2 rounded-lg', { activePage: page === currentPage }]"
+      >
+        {{ page }}
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { IconSearch } from "@tabler/icons-vue";
-import BookList from "~/components/books/BookList.vue";
+import BookList from "~/components/books/StoryList.vue";
 import { useStore } from "vuex";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const store = useStore();
 const route = useRoute();
 const router = useRouter();
-const selectedCategory = ref(route.query.category || '');  // initial category from query
-const storyList = ref([]);
-const categoriesData = ref([]);
-const totalStoriesPerPage = 10;
+
+// State Management
+const selectedCategory = ref(route.query.category || ""); // Kategori yang dipilih
+const searchQuery = ref(route.query.search || ""); // Query pencarian berdasarkan judul
+const storyList = ref([]); // Semua cerita
+const categoriesData = ref([]); // Daftar kategori
+const totalStoriesPerPage = 12;
 const currentPage = ref(1);
 
+// Ambil data cerita dan kategori saat halaman dimuat
+const fetchStoriesAndCategories = async () => {
+  try {
+    const stories = await store.dispatch("story/getStoryData", { no_pagination: true });
+    storyList.value = stories;
+    const categories = await store.dispatch("story/getCategoryData");
+    categoriesData.value = categories;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
+onMounted(fetchStoriesAndCategories);
+
+// Filter cerita berdasarkan kategori & searchQuery
 const filteredStories = computed(() => {
-   // Filter cerita berdasarkan kategori jika ada
+  let filtered = storyList.value;
+
+  // Filter berdasarkan kategori
   if (selectedCategory.value) {
-    return storyList.value.filter(story => 
-      story.category.toLowerCase() === selectedCategory.value.toLowerCase());
+    filtered = filtered.filter(
+      (story) => story.category.toLowerCase() === selectedCategory.value.toLowerCase()
+    );
   }
-  // Paginasi: Ambil hanya cerita yang sesuai dengan halaman saat ini
-  const startIndex = (currentPage.value -1) * totalStoriesPerPage;
-  //return storyList.value;
-  return filtered.slice(startIndex, startIndex + totalStoriesPerPage);
+
+  // Filter berdasarkan judul
+  if (searchQuery.value) {
+    filtered = filtered.filter((story) =>
+      story.title.toLowerCase().includes(searchQuery.value.toLowerCase())
+    );
+  }
+
+  // Sorting berdasarkan sortBy dan sortOrder
+  filtered.sort((a, b) => {
+    let aValue = a[sortBy.value];
+    let bValue = b[sortBy.value];
+
+    if (sortBy.value === "created_at") {
+      aValue = new Date(aValue);
+      bValue = new Date(bValue);
+    }
+
+    if (aValue < bValue) return sortOrder.value === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortOrder.value === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  return filtered;
 });
 
-onMounted(async () => {
-  try {
-    const result = await store.dispatch("story/getStoryData");
-    storyList.value = result; //simpan data cerita yang diambil
-    console.log(storyList.value, "INI DATA STORY");
-  } catch (error) {
-    console.log(error);
-  }
+// Pagination
+const paginatedStories = computed(() => {
+  const startIndex = (currentPage.value - 1) * totalStoriesPerPage;
+  const endIndex = currentPage.value * totalStoriesPerPage;
+  return filteredStories.value.slice(startIndex, endIndex);
 });
 
-onMounted(async () => {
-  try {
-    const result = await store.dispatch("story/getCategoryData");
-    categoriesData.value = result;
-    console.log(categoriesData.value, "INI DATA KATEGORI");
-  } catch (error) {
-    console.log(error);
-  }
+const totalPages = computed(() => {
+  return Math.ceil(filteredStories.value.length / totalStoriesPerPage);
 });
 
-// Watch for changes to selectedCategory (this will trigger when URL is updated)
-watch(() => route.query.category, (newCategory) => {
-  selectedCategory.value = newCategory || '';  // Update the selected category
-}, { immediate: true });
+// Sinkronisasi kategori & search query dengan URL
+watch(
+  [() => selectedCategory.value, () => searchQuery.value],
+  ([newCategory, newSearch]) => {
+    router.push({
+      query: {
+        category: newCategory || undefined,
+        search: newSearch || undefined,
+      },
+    });
+  }
+);
 
+// Sinkronisasi dari URL ke state
+watch(
+  () => route.query,
+  (query) => {
+    selectedCategory.value = query.category || "";
+    searchQuery.value = query.search || "";
+  },
+  { immediate: true }
+);
+
+// Fungsi update search query
+const updateSearchQuery = () => {
+  router.push({ query: { ...route.query, search: searchQuery.value || undefined } });
+};
+
+const sortBy = ref("created_at"); // Default: newest
+const sortOrder = ref("desc"); // Default: descending
+const sortByWithOrder = ref("created_at-desc"); // Default: Newest
+
+const updateSorting = () => {
+  const [field, order] = sortByWithOrder.value.split("-");
+  sortBy.value = field;
+  sortOrder.value = order;
+};
 </script>
+
 
 <style scoped>
 .search-bar {
@@ -183,6 +248,16 @@ input {
   color: #466543;
 }
 .pagination:hover {
+  background-color: #466543;
+  color: #f0f5ed;
+}
+.home:hover {
+  text-decoration: underline;
+}
+.home, .slash{
+  color: #466543;
+}
+.activePage {
   background-color: #466543;
   color: #f0f5ed;
 }

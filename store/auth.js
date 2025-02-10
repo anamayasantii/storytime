@@ -1,7 +1,7 @@
   import axios from "axios";
   import Cookies from "js-cookie";
 
-  const baseUrl = "http://127.0.0.1:8000/api/";
+  const baseUrl = "http://159.203.137.163/api/";
 
   export default {
     namespaced: true,
@@ -26,7 +26,7 @@
 
       setUserLogout(state) {
         state.token = null;
-        state.userLogin = null;
+        state.userLogin = {};
         state.isLogin = false;
         state.tokenExpirationDate = null;
         Cookies.remove("jwt");
@@ -39,6 +39,33 @@
       }
     },
     actions: {
+      async logout({ commit }) {
+        const token = Cookies.get('jwt'); // Get token from cookie
+        if (!token) {
+          console.error("User is not logged in.");
+          return;
+        }
+    
+        try {
+          // Make a POST request to logout endpoint
+          const { data } = await axios.post(`${baseUrl}logout`, {}, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+    
+          // If logout is successful, commit mutation to clear state
+          if (data.success) {
+            commit("setUserLogout");
+            console.log(data.message); // Log success message
+          } else {
+            console.error("Logout failed:", data.message);
+          }
+        } catch (err) {
+          console.error("Error during logout:", err.response ? err.response.data : err.message);
+        }
+      },
+
       async getRegisterData({ commit }, payload) {
 
         try {
@@ -127,45 +154,47 @@
 
       async getUser({ commit }) {
         try {
-          const token = Cookies.get('jwt');
+          const token = Cookies.get('jwt'); // Ambil token dari cookie
           console.log('Token:', token); // Debugging
-
+      
           if (!token) {
             console.error('Token is missing or expired');
             return;
           }
-
+      
           const { data } = await axios.get(`${baseUrl}users`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          console.log("Respone Backenddddddddddddddddd", data);
-          console.log('API Response:', data);
-          if (data && data.user) {
-            commit('setUserLogin', { userData: data.user, loginStatus: true });
+      
+          console.log("Response Backend:", data);
+      
+          // Cek struktur data sesuai respon dari backend
+          if (data && data.success && data.data) {
+            commit('setUserLogin', { userData: data.data, loginStatus: true });
           } else {
             console.error('User not found or invalid response structure', data);
           }
         } catch (err) {
           console.error('Error fetching user:', err.response ? err.response.data : err.message);
-          // Tambahkan log untuk memeriksa status kode dan respons lainnya
-          console.log("Full error:", err);
-        }      
+          console.log("Full error:", err); // Debugging
+        }
       },    
 
-      async updateProfile({ commit }, payload) {
+      async updateProfile(_, payload) {
         try {
           const token = Cookies.get("jwt");
           if (!token) {
             throw new Error("User not logged in");
           }
       
-          // Pastikan untuk memeriksa apakah ada password baru
+          // Validasi password baru
           if (payload.newPassword && payload.newPassword !== payload.confirmPassword) {
             throw new Error("Passwords do not match");
           }
       
+          // Kirim request ke backend
           const { data } = await axios.put(
-            baseUrl + 'users', 
+            `${baseUrl}users`,
             payload,
             {
               headers: {
@@ -174,11 +203,15 @@
             }
           );
       
-          return data;
+          if (data.success) {
+            // Kembalikan data jika pembaruan berhasil
+            return data.data; // Mengembalikan data pengguna yang diperbarui
+          } else {
+            throw new Error(data.message || "Update failed");
+          }
         } catch (err) {
-          console.error("Error response:", err.response);
-          console.error(err);
-          return false;
+          console.error("Error response:", err.response?.data || err.message);
+          return false; // Mengembalikan `false` jika terjadi kesalahan
         }
       },      
 

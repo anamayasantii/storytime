@@ -4,7 +4,24 @@
       {{ label }} <span class="required">*</span>
       <slot></slot>
     </label>
+    
+    <!-- Check if the type is textarea -->
+    <textarea
+      v-if="type === 'textarea'"
+      :id="identity"
+      :placeholder="placeholder"
+      :readonly="readonly === '1'"
+      :value="modelValue"
+      @input="$emit('update:modelValue', $event.target.value)"
+      @keyup="$emit('keyInput', $event.target.value)"
+      @focus="$emit('totalTimeFocus', $event.target.value)"
+      class="form-control break-words whitespace-pre-line"
+      rows="8"
+    ></textarea>
+
+    <!-- Default input for other types -->
     <input
+      v-else
       :class="['form-control', { 'file-input': type == 'file' }]"
       :type="type"
       :id="identity"
@@ -14,6 +31,7 @@
       @input="$emit('update:modelValue', $event.target.value)"
       @keyup="$emit('keyInput', $event.target.value)"
       @focus="$emit('totalTimeFocus', $event.target.value)"
+      :multiple="type === 'file'"
     />
   </div>
 </template>
@@ -47,6 +65,14 @@
 .form-control:focus {
   border-color: #466543;
   outline: none;
+}
+.break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.whitespace-pre-line {
+  white-space: pre-line;
 }
 </style>
 

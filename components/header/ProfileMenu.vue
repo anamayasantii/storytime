@@ -2,15 +2,12 @@
   <div class="header__signup flex justify-evenly items-center text-right col-8 col-sm-4 fw-semibold">
     <!-- Profile Picture dan Username -->
     <div class="profile-info flex items-center space-x-2">
-      <!-- Cek apakah ada avatar dan tampilkan gambar jika ada -->
-      <img v-if="userData.image" :src="`http://localhost:8000${userData.image || previewImage}`"
-      alt="Profile Picture" class="w-8 h-8 rounded-full object-cover" />
-      <i v-else class="fa-solid fa-user text-blue-600"></i> <!-- Icon default jika tidak ada avatar -->
+      <img v-if="userData.image" :src="userData.image || previewImage"
+        alt="Profile Picture" class="w-8 h-8 rounded-full object-cover" />
+      <i v-else class="fa-solid fa-user text-blue-600"></i>
       <ul class="navbar-nav">
         <li class="nav-item dropdown relative">
-          <a
-            class="nav-link dropdown-toggle cursor-pointer"
-            @click.prevent="toggleDropdown">
+          <a class="nav-link dropdown-toggle cursor-pointer" @click.prevent="toggleDropdown">
             {{ userData.username }}
           </a>
           <ul v-if="isDropdownOpen" class="dropdown-menu absolute z-10 bg-white shadow-lg">
@@ -27,38 +24,26 @@
 <script setup>
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
-import { computed, ref, onMounted } from "vue";
+import { computed, ref } from "vue";
 
 const store = useStore();
 const router = useRouter();
-const isDropdownOpen = ref(false); // State untuk mengontrol dropdown
+const isDropdownOpen = ref(false);
 
 const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value; // Toggle dropdown
+  isDropdownOpen.value = !isDropdownOpen.value;
 };
 
-const logout = () => {
-  store.commit("auth/setUserLogout");
-  router.push("/");
-};
-
-// Deklarasikan userData sebelum menggunakannya
-const userData = computed(() => {
-  return store.state.auth.userLogin;
-});
-
-onMounted(async () => {
+const logout = async () => {
   try {
-    await store.dispatch('auth/getUser');
-    console.log('User Data after fetch:', userData.value); // Debugging
+    await store.dispatch("auth/logout"); // Call the logout action
+    router.push("/"); // Redirect user to homepage
   } catch (error) {
-    console.error('Failed to fetch user data:', error);
+    console.error("Error logging out:", error);
   }
-});
+};
 
-// Debugging: Log user data to console setelah deklarasi
-console.log("User Data:", userData.value);
-console.log('GAMBARRRR URLLLLLLLLLLLLLLLLLL:', userData.image);  // Debugging
+const userData = computed(() => store.state.auth.userLogin);
 </script>
 
 <style scoped>

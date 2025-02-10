@@ -1,33 +1,36 @@
 <template>
   <div class="w-full flex flex-col h-full">
     <!-- Bagian Atas -->
-    <div
-      class="bgprofile flex items-center justify-space-between h-1/3 bg-gray-200 p-4 mb-6">
-      <div
-        class="flex items-center justify-space-between p-6 mx-auto max-w-5xl rounded-lg">
-        <div>
-          <img
-            class="w-20 h-20 rounded-full object-cover"
-            :src="`http://localhost:8000${userData.image || previewImage}`"
-              alt="Profile Picture"
-          />
-        </div>
-
-        <div class="flex-1 px-6" v-if="userData.username">
-          <h1 class="text-xl font-bold">{{ userData.username }}</h1>
-          <p class="text-gray-600 text-sm">{{ userData.email }}</p>
-          <p class="text-gray-700 text-sm mt-2">
-            {{ userData.aboutme }}
-          </p>
-        </div>
-
-        <button
-          @click="editProfile"
-          class="button text-white py-2 ms-2 rounded hover:bg-green-700">
-          Edit Profile
-        </button>
-      </div>
+    <div class="bgprofile flex items-center h-1/3 bg-gray-200 p-4 mb-6">
+  <div class="flex items-center w-full p-6 mx-auto max-w-5xl rounded-lg gap-4">
+    <!-- Foto Profile -->
+    <div>
+      <img
+        class="w-20 h-20 rounded-full object-cover"
+        :src="userData.image || previewImage"
+        alt="Profile Picture"
+      />
     </div>
+
+    <!-- Informasi User -->
+    <div class="flex-1" v-if="userData.username">
+      <h1 class="text-xl font-bold">{{ userData.name }}</h1>
+      <p class="text-gray-600 text-sm">{{ userData.email }}</p>
+      <p class="text-gray-700 text-sm mt-2">
+        {{ userData.aboutme }}
+      </p>
+    </div>
+
+    <!-- Tombol Edit Profile di kanan -->
+    <button
+      @click="editProfile"
+      class="button text-white py-2 px-4 rounded hover:bg-green-700 ml-auto"
+    >
+      Edit Profile
+    </button>
+  </div>
+</div>
+
 
     <!-- Bagian Bawah -->
     <div class="flex-grow flex pt-6">
@@ -62,11 +65,12 @@
               Share your unique voice with the world – start writing your story
               today!
             </p>
+            <NuxtLink to="CreateStory">
             <button
-              class="btnstory mt-4 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600"
-            >
+              class="btnstory mt-4 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600">
               Write story
             </button>
+          </NuxtLink>
           </div>
         </div>
       </div>
@@ -74,26 +78,35 @@
       <!-- Kolom Kanan -->
       <div
         v-if="activeTab === 'myStory'"
-        class="text-center w-2/3 pt-10 flex-grow overflow-auto"
-      >
-        <h2 class="text-xl font-semibold text-gray-800">No stories yet</h2>
+        class="text-center w-2/3 pt-10 flex-grow overflow-auto">
+        <!-- <h2 class="text-xl font-semibold text-gray-800">No stories yet</h2>
         <p class="text-gray-600 mt-2">
           You haven't shared any stories yet. Start your fitness journey today!
         </p>
-        <div class="flex justify-center mb-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
           <img
             src="@/assets/images/vectorprofile.svg"
             alt="Centered Image"
             class="w-64 h-auto"
           />
+        </div> -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-20 mr-10">
+          <div
+            v-for="story in storyList"
+            :key="story.id"
+            class="flex justify-center"
+            v-if="storyList.length > 0"
+          >
+            <CreateList :story="story" />
+          </div>
         </div>
+        <!-- <p v-else class="text-center text-gray-500">Belum ada cerita yang dibuat.</p> -->
       </div>
 
-      <div
+      <!-- <div
         v-if="activeTab === 'bookmark'"
-        class="text-center w-2/3 pt-10 flex-grow overflow-auto"
-      >
-        <h2 class="text-xl font-semibold text-gray-800">No bookmarks yet</h2>
+        class="text-center w-2/3 pt-10 flex-grow overflow-auto"> -->
+        <!-- <h2 class="text-xl font-semibold text-gray-800">No bookmarks yet</h2>
         <p class="text-gray-600 mt-2">
           You haven't saved any bookmarks yet. Explore and bookmark your top
           workouts!
@@ -104,9 +117,38 @@
             alt="Centered Image"
             class="w-64 h-auto"
           />
+        </div> -->
+        <!-- <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6 mb-20">
+          <div
+            v-for="story in storyList.slice(0,5)"
+            :key="story.id"
+            class="flex justify-center">
+            <BookmarkList :story="story" />
+          </div>
+        </div> -->
+        <div v-if="activeTab === 'bookmark'" class="text-center w-2/3 pt-10 flex-grow overflow-auto">
+          <div v-if="!isLoading && bookmarks.length === 0">
+            <h2 class="text-xl font-semibold text-gray-800">No stories yet</h2>
+              <p class="text-gray-600 mt-2">
+                You haven't shared any stories yet. Start your fitness journey today!
+              </p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <img
+                  src="@/assets/images/vectorprofile.svg"
+                  alt="Centered Image"
+                  class="w-64 h-auto"
+                />
+            </div>
+          </div>
+
+          <div v-if="!isLoading && bookmarks.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mt-6 mb-20">
+            <div v-for="bookmark in bookmarks" :key="bookmark.id" class="flex justify-center">
+              <BookmarkList :story="bookmark.story" /> <!-- Menampilkan data story dari bookmark -->
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+        </div>
+    <!-- </div> -->
 
     <!-- Modal Profile -->
     <div v-if="showModal" class="modal-overlay">
@@ -119,7 +161,7 @@
           <!-- Profile Picture Section -->
           <div class="flex items-center space-x-4">
             <img
-              :src="`http://localhost:8000${userData.image || previewImage}`"
+              :src="userData.image || previewImage"
               alt="Profile Picture"
               class="profile-pic"
             />
@@ -154,7 +196,6 @@
             <label for="aboutme">About Me</label>
             <textarea id="aboutme" v-model="userData.aboutme" placeholder="Tell us about yourself.."></textarea>
           </div>
-          <button @click="updateProfile" class="btn-save">Update Profile</button>
         </div>
 
         <!-- Modal Kanan -->
@@ -190,7 +231,6 @@
               placeholder="Confirm your new password"
             />
           </div>
-
           <button @click="updateProfile" class="btn-save">Save Changes</button>
         </div>
       </div>
@@ -201,6 +241,9 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useStore } from "vuex";
+import CreateList from "~/components/books/CreateList.vue";
+import BookmarkList from "~/components/books/BookmarkList.vue";
+import axios from 'axios';
 
 const activeTab = ref("myStory");
 const showModal = ref(false);
@@ -240,15 +283,11 @@ onMounted(async () => {
   }
 });
 
-console.log('Image URL:', `http://localhost:8000${userData.image}`);
+console.log('Image URL:', userData.image);
 console.log('userData:', userData);
 
 const updateProfile = async () => {
   try {
-    if (!userData.value.name || !userData.value.aboutme) {
-      throw new Error("Name or About Me cannot be empty");
-    }
-
     if (userData.value.newPassword !== userData.value.confirmPassword) {
       throw new Error("Passwords do not match");
     }
@@ -301,6 +340,48 @@ function handleFileUpload(event) {
   }
 };
 console.log('GAMBARRRR URLLLLLLLLLLLLLLLLLL:', userData.image);  // Debugging
+
+onMounted(async () => {
+  try {
+    const result = await store.dispatch("story/getStoryDataUser"); // Panggil action khusus user
+    storyList.value = result; // Pastikan hanya data milik user yang masuk
+    console.log(storyList.value, "INI DATA STORY USER YANG LOGIN SAJA");
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+const storyList = ref([]);
+
+const bookmarks = ref([]); // Untuk menyimpan data bookmark
+const isLoading = ref(false); // Untuk menampilkan loading saat data sedang diambil
+
+// Fungsi untuk mengambil data bookmark
+const fetchBookmarks = async () => {
+  isLoading.value = true;
+  try {
+    const response = await axios.get('http://159.203.137.163/api/bookmark-user', {
+      headers: {
+        Authorization: `Bearer ${token.value}`, // Menambahkan token di header untuk autentikasi
+      },
+    });
+    bookmarks.value = response.data.data.data; // Menyimpan data bookmarks yang diterima
+    console.log("INI DATA BOOKKK MARKKKKKKKKKK", bookmarks.value);
+  } catch (error) {
+    console.error('Error fetching bookmarks:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  if (token.value) {
+    fetchBookmarks(); // Mengambil data bookmark setelah komponen dimuat
+  } else {
+    // Redirect ke halaman login jika tidak ada token
+    window.location.href = '/login';
+  }
+});
 </script>
 
 <style scoped>

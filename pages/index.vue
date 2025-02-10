@@ -3,19 +3,21 @@
     <div v-if="isLoggedIn">
       <h1 class="text-xl font-bold">Hi, {{ userData.username }}</h1>
     </div>
-    <h1 class="text-4xl font-playFair mb-5 font-bold">Welcome to Storytime</h1>
+    <h1 class="text-4xl font-playFair mb-5 font-bold">Welcome to Wkwk Land</h1>
     <p class="mb-6 w-3/4 md:w-7/10 font-playFair">
       The world's most-loved social storytelling platform. Storytime connects a
       global community of 90 million readers and writers through the power of
       story.
     </p>
-    <div
-      class="search-bar flex items-center w-1/2 border border-gray-300 rounded-lg p-2">
+    <div class="search-bar flex items-center w-1/2 border border-gray-300 rounded-lg p-2">
       <input
+        v-model="searchQuery"
         type="text"
         placeholder="Search story"
-        class="flex-1 border-none outline-none p-2"/>
-      <IconSearch class="text-gray-400 cursor-pointer" />
+        class="flex-1 border-none outline-none p-2"
+        @keyup.enter="searchStories"
+      />
+      <IconSearch class="text-gray-400 cursor-pointer" @click="searchStories" />
     </div>
     <img
       src="@/assets/images/image 14.svg"
@@ -110,10 +112,13 @@
 
         <!-- Categories Section -->
         <div class="ml-20 mr-20 mt-6 mb-20 grid grid-cols-3 sm:grid-cols-7 gap-4">
-          <button v-for="category in categoriesData" :key="category.id"
+          <NuxtLink
+            v-for="category in categoriesData"
+            :key="category.id"
+            :to="{ name: 'AllStories', query: { category: category.name } }"
             class="btn-category font-medium py-10 px-6 text-center rounded-lg">
             {{ category.name }}
-          </button>
+          </NuxtLink>
         </div>
       </div>
     </div>
@@ -122,10 +127,11 @@
 
 <script setup>
 import { IconSearch } from "@tabler/icons-vue";
-import BookList from "~/components/books/BookList.vue";
+import BookList from "~/components/books/StoryList.vue";
 import { onMounted, ref, computed } from "vue";
 import { useStore } from "vuex";
-import BookCategory from "~/components/books/BookCategory.vue";
+import { useRouter } from "vue-router";
+import BookCategory from "~/components/books/StoryCategory.vue";
 
 const isLoggedIn = computed(() => store.state.auth.isLogin); // Ambil status login dari Vuex
 const store = useStore();
@@ -192,6 +198,15 @@ function formatDate(dateString) {
         year: "numeric",
     });
 }
+
+const router = useRouter();
+const searchQuery = ref("");
+
+const searchStories = () => {
+  if (searchQuery.value.trim()) {
+    router.push({ name: "AllStories", query: { search: searchQuery.value } });
+  }
+};
 </script>
 
 <style scoped>

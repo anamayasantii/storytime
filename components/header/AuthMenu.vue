@@ -13,7 +13,9 @@
       Login
     </button>
   </NuxtLink>
-  <ProfileMenu v-if="isLoggedIn"/>
+    <div class="profile-menu ml-6">
+      <ProfileMenu v-if="isLoggedIn"/>
+    </div>
   </div>
 </template>
 
@@ -45,5 +47,8 @@ const isLoggedIn = computed(() => store.state.auth.isLogin); // Ambil status log
 }
 .btn:hover {
   opacity: 0.8;
+}
+.profile-menu {
+  margin-right: 30px; /* 🔹 Memperbesar jarak dari tombol login */
 }
 </style>
