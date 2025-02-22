@@ -1,262 +1,304 @@
-  import axios from "axios";
-  import Cookies from "js-cookie";
+// ============================================
+// IMPORT LIBRARY YANG DIBUTUHKAN
+// ============================================
+import axios from "axios";      // Library untuk melakukan HTTP request ke API
+import Cookies from "js-cookie"; // Library untuk mengelola cookies di browser
 
-  const baseUrl = "http://159.203.137.163/api/";
+// URL dasar untuk semua request API
+const baseUrl = "http://157.245.193.94/api/";
 
-  export default {
-    namespaced: true,
-    state: () => ({
-      token: Cookies.get("jwt") || null,
-      tokenExpirationDate: Cookies.get('tokenExpirationDate') || null,
-      userLogin: {},
-      isLogin: false,
-    }),
-    mutations: {
-      setToken(state, { idToken, expiresIn }) {
-        state.token = idToken;
-        state.tokenExpirationDate = expiresIn;
-        Cookies.set("tokenExpirationDate", expiresIn);
-        Cookies.set("jwt", idToken);
-      },
+export default {
+  // Mengaktifkan namespace Vuex agar tidak bertabrakan dengan modul lain
+  namespaced: true,
 
-      setUserLogin(state, { userData, loginStatus }) {
-        state.userLogin = userData;
-        state.isLogin = loginStatus;
-      },
+  // ============================================
+  // STATE - Tempat menyimpan data utama
+  // ============================================
+  state: () => ({
+    // Menyimpan token JWT untuk autentikasi
+    token: Cookies.get("jwt") || null,
 
-      setUserLogout(state) {
-        state.token = null;
-        state.userLogin = {};
-        state.isLogin = false;
-        state.tokenExpirationDate = null;
-        Cookies.remove("jwt");
-        Cookies.remove("tokenExpirationDate");
-        Cookies.remove("UID");
-      },
+    // Menyimpan waktu kadaluarsa token
+    tokenExpirationDate: Cookies.get('tokenExpirationDate') || null,
 
-      setUSerImage(state, avatarLink) {
-        state.userLogin.user_images = avatarLink;
+    // Menyimpan data user yang sedang login (nama, email, dll)
+    userLogin: {},
+
+    // Status apakah user sedang login atau tidak
+    isLogin: false,
+  }),
+
+  // ============================================
+  // MUTATIONS - Fungsi untuk mengubah state
+  // ============================================
+  mutations: {
+    // Mutation untuk menyimpan token baru
+    // Dipanggil saat user berhasil login atau register
+    setToken(state, { idToken, expiresIn }) {
+      state.token = idToken;                              // Simpan token di state
+      state.tokenExpirationDate = expiresIn;             // Simpan waktu kadaluarsa
+      Cookies.set("tokenExpirationDate", expiresIn);     // Simpan ke cookies
+      Cookies.set("jwt", idToken);                       // Simpan token ke cookies
+    },
+
+    // Mutation untuk mengatur data user setelah login berhasil
+    setUserLogin(state, { userData, loginStatus }) {
+      state.userLogin = userData;      // Simpan data user (profil, dll)
+      state.isLogin = loginStatus;     // Update status login
+    },
+
+    // Mutation untuk menghapus semua data saat user logout
+    setUserLogout(state) {
+      // Hapus semua data di state
+      state.token = null;
+      state.userLogin = {};
+      state.isLogin = false;
+      state.tokenExpirationDate = null;
+
+      // Hapus semua data di cookies
+      Cookies.remove("jwt");
+      Cookies.remove("tokenExpirationDate");
+      Cookies.remove("UID");
+    },
+
+    // Mutation untuk update foto profil user
+    setUSerImage(state, avatarLink) {
+      state.userLogin.user_images = avatarLink;
+    }
+  },
+
+  // ============================================
+  // ACTIONS - Fungsi untuk operasi async dan logika
+  // ============================================
+  actions: {
+    // Action untuk proses logout
+    async logout({ commit }) {
+      // Ambil token dari cookies
+      const token = Cookies.get('jwt');
+      
+      // Cek apakah user sudah login (ada token)
+      if (!token) {
+        console.error("User belum login");
+        return;
+      }
+    
+      try {
+        // Kirim request logout ke server
+        const { data } = await axios.post(`${baseUrl}logout`, {}, {
+          headers: {
+            Authorization: `Bearer ${token}`,  // Sertakan token untuk autentikasi
+          },
+        });
+    
+        // Jika logout berhasil, bersihkan data
+        if (data.success) {
+          commit("setUserLogout");
+          console.log(data.message);
+        } else {
+          console.error("Logout gagal:", data.message);
+        }
+      } catch (err) {
+        console.error("Error saat logout:", err.response ? err.response.data : err.message);
       }
     },
-    actions: {
-      async logout({ commit }) {
-        const token = Cookies.get('jwt'); // Get token from cookie
+
+    // Action untuk proses registrasi user baru
+    async getRegisterData({ commit }, payload) {
+      try {
+        // Kirim data registrasi ke server
+        const { data } = await axios.post(baseUrl + 'register', {
+          name: payload.name,               // Nama lengkap
+          username: payload.username,       // Username
+          email: payload.email,            // Email
+          password: payload.password,       // Password
+          confirm_password: payload.confirm_password,  // Konfirmasi password
+        });
+
+        // Debug: tampilkan response dari server
+        console.log(data);
+
+        // Jika registrasi berhasil (dapat token)
+        if (data.data.token) {
+          // Simpan token
+          commit("setToken", {
+            idToken: data.data.token,
+            expiresIn: new Date().getTime() + Number.parseInt(data.expiresIn) * 1000,
+          });
+
+          // Simpan data user
+          commit("setUserLogin", {
+            userData: data.data.user,
+            loginStatus: true,
+          });
+
+          return true;  // Registrasi berhasil
+        } else {
+          console.error("Server tidak mengembalikan token");
+          return false;
+        }
+      } catch (error) {
+        // Tangani error dari server
+        if (error.response) {
+          console.error("Error validasi:", error.response.data);
+          alert(error.response.data.message || "Terjadi kesalahan validasi.");
+        } else {
+          console.error("Error registrasi:", error);
+          alert("Terjadi kesalahan yang tidak diketahui.");
+        }
+        return false;
+      }
+    },
+
+    // Action untuk proses login
+    async getLoginData({ commit }, payload) {
+      try {
+        // Kirim data login ke server
+        const { data } = await axios.post(baseUrl + 'login', {
+          email: payload.email,        // Email user
+          password: payload.password,  // Password user
+        });
+
+        // Debug: tampilkan response
+        console.log("Response data:", data);
+
+        // Jika login berhasil, simpan data ke cookies
+        if (data.data.user && data.data.user.id) {
+          Cookies.set("UID", data.data.user.id);     // ID User
+        }
+        if (data.data.token) {
+          Cookies.set("jwt", data.data.token);       // Token JWT
+        }
+
+        // Simpan token ke state
+        commit("setToken", {
+          idToken: data.data.token,
+          expiresIn: new Date().getTime() + Number.parseInt(data.expiresIn) * 1000,
+        });
+
+        // Simpan data user ke state
+        commit("setUserLogin", {
+          userData: data.data.user,
+          loginStatus: true,
+        });
+
+        return data.data.user.id;  // Kembalikan ID user
+
+      } catch (err) {
+        console.log(err);
+        return false;  // Login gagal
+      }
+    },
+
+    // Action untuk mengambil data user dari server
+    async getUser({ commit }) {
+      try {
+        // Ambil token dari cookies
+        const token = Cookies.get('jwt');
+        
+        // Cek keberadaan token
         if (!token) {
-          console.error("User is not logged in.");
+          console.error('Token tidak ada atau sudah expired');
           return;
         }
-    
-        try {
-          // Make a POST request to logout endpoint
-          const { data } = await axios.post(`${baseUrl}logout`, {}, {
+      
+        // Ambil data user dari server
+        const { data } = await axios.get(`${baseUrl}users`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      
+        // Debug: tampilkan response
+        console.log("Response Backend:", data);
+      
+        // Jika data valid, simpan ke state
+        if (data && data.success && data.data) {
+          commit('setUserLogin', { 
+            userData: data.data, 
+            loginStatus: true 
+          });
+        } else {
+          console.error('User tidak ditemukan atau struktur response tidak valid', data);
+        }
+      } catch (err) {
+        console.error('Error mengambil data user:', err.response ? err.response.data : err.message);
+      }
+    },    
+
+    // Action untuk update profil user
+    async updateProfile(_, payload) {
+      try {
+        // Cek token
+        const token = Cookies.get("jwt");
+        if (!token) {
+          throw new Error("User belum login");
+        }
+      
+        // Validasi password baru jika ada
+        if (payload.newPassword && payload.newPassword !== payload.confirmPassword) {
+          throw new Error("Password baru tidak cocok");
+        }
+      
+        // Kirim request update ke server
+        const { data } = await axios.put(
+          `${baseUrl}users`,
+          payload,
+          {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          });
-    
-          // If logout is successful, commit mutation to clear state
-          if (data.success) {
-            commit("setUserLogout");
-            console.log(data.message); // Log success message
-          } else {
-            console.error("Logout failed:", data.message);
           }
-        } catch (err) {
-          console.error("Error during logout:", err.response ? err.response.data : err.message);
+        );
+      
+        // Return data user yang sudah diupdate
+        if (data.success) {
+          return data.data;
+        } else {
+          throw new Error(data.message || "Update gagal");
         }
-      },
+      } catch (err) {
+        console.error("Error response:", err.response?.data || err.message);
+        return false;
+      }
+    },      
 
-      async getRegisterData({ commit }, payload) {
-
-        try {
-          const { data } = await axios.post(baseUrl + 'register', {
-            name: payload.name,
-            username: payload.username,
-            email: payload.email,
-            password: payload.password,
-            confirm_password: payload.confirm_password,
-          });
-
-          console.log(data);
-
-          // Cek apakah token ada
-          if (data.data.token) {
-            // Akses token dari data.data
-            commit("setToken", {
-              idToken: data.data.token, // Ambil token yang benar
-              expiresIn:
-                new Date().getTime() + Number.parseInt(data.expiresIn) * 1000,
-            });
-            commit("setUserLogin", {
-              userData: data.data.user, // Ambil data pengguna dari respons
-              loginStatus: true, // Set status login menjadi true
-            });
-            return true;
-          } else {
-            console.error("No token returned from registration");
-            return false; // Kembalikan false jika tidak ada token
-          }
-        } catch (error) {
-          if (error.response) {
-            console.error("Validation errors:", error.response.data);
-            alert(error.response.data.message || "Validation error occurred.");
-          } else {
-            console.error("Registration error:", error);
-            alert("An unexpected error occurred.");
-          }
-          return false; // Kembalikan false jika terjadi kesalahan
+    // Action untuk upload foto profil
+    async uploadAvatar({ commit }, file) {
+      try {
+        // Cek token
+        const token = Cookies.get("jwt");
+        if (!token) {
+          throw new Error("User belum login");
         }
-      },
-
-      async getLoginData({ commit }, payload) {
-
-        // Tentukan apakah input adalah email atau username
-        console.log("Payload:", payload);
-        const loginField =
-          payload.identifier && payload.identifier.includes("@")
-            ? "email"
-            : "username";
-
-        try {
-          const { data } = await axios.post( baseUrl + 'login', {
-            email: payload.email, // Kirim email atau username
-            password: payload.password,
-          });
-
-          // Debugging: Periksa respons dari server
-          console.log("Response data:", data);
-
-          // Simpan UID dan JWT ke cookie jika ada
-          if (data.data.user && data.data.user.id) {
-              Cookies.set("UID", data.data.user.id); // Simpan UID ke dalam cookie
-          }
-          if (data.data.token) {
-              Cookies.set("jwt", data.data.token); // Simpan JWT ke dalam cookie
-          }
-
-          commit("setToken", {
-            idToken: data.data.token, // Pastikan menggunakan nama yang benar
-            expiresIn:
-              new Date().getTime() + Number.parseInt(data.expiresIn) * 1000,
-          });
-
-          commit("setUserLogin", {
-            userData: data.data.user, // Ambil data pengguna dari respons
-            loginStatus: true, // Set status login menjadi true
-          });
-
-          return data.data.user.id;
-        } catch (err) {
-          console.log(err);
-          return false; // Kembalikan false jika login gagal
+      
+        // Cek file
+        if (!file) {
+          throw new Error("Tidak ada file yang dipilih");
         }
-      },
-
-      async getUser({ commit }) {
-        try {
-          const token = Cookies.get('jwt'); // Ambil token dari cookie
-          console.log('Token:', token); // Debugging
       
-          if (!token) {
-            console.error('Token is missing or expired');
-            return;
-          }
+        // Siapkan form data
+        const formData = new FormData();
+        formData.append("files[]", file);  // Nama field sesuai ekspektasi server
       
-          const { data } = await axios.get(`${baseUrl}users`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+        // Upload file ke server
+        const { data } = await axios.post(baseUrl + "upload", formData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        });
       
-          console.log("Response Backend:", data);
+        // Debug: tampilkan response
+        console.log("Response data from backend:", data);
       
-          // Cek struktur data sesuai respon dari backend
-          if (data && data.success && data.data) {
-            commit('setUserLogin', { userData: data.data, loginStatus: true });
-          } else {
-            console.error('User not found or invalid response structure', data);
-          }
-        } catch (err) {
-          console.error('Error fetching user:', err.response ? err.response.data : err.message);
-          console.log("Full error:", err); // Debugging
+        // Validasi response
+        if (!data || !data.data) {
+          throw new Error("Response server tidak valid");
         }
-      },    
-
-      async updateProfile(_, payload) {
-        try {
-          const token = Cookies.get("jwt");
-          if (!token) {
-            throw new Error("User not logged in");
-          }
       
-          // Validasi password baru
-          if (payload.newPassword && payload.newPassword !== payload.confirmPassword) {
-            throw new Error("Passwords do not match");
-          }
-      
-          // Kirim request ke backend
-          const { data } = await axios.put(
-            `${baseUrl}users`,
-            payload,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-      
-          if (data.success) {
-            // Kembalikan data jika pembaruan berhasil
-            return data.data; // Mengembalikan data pengguna yang diperbarui
-          } else {
-            throw new Error(data.message || "Update failed");
-          }
-        } catch (err) {
-          console.error("Error response:", err.response?.data || err.message);
-          return false; // Mengembalikan `false` jika terjadi kesalahan
-        }
-      },      
-
-      async uploadAvatar({ commit }, file) {
-        try {
-          const token = Cookies.get("jwt"); // Ambil token dari cookie
-          if (!token) {
-            throw new Error("User not logged in");
-          }
-      
-          // Pastikan file ada
-          if (!file) {
-            throw new Error("No file selected");
-          }
-      
-          const formData = new FormData();
-          formData.append("files[]", file); // Properti 'files[]' sesuai dengan backend
-      
-          // Kirim request ke backend
-          const { data } = await axios.post(baseUrl + "upload", formData, {
-            headers: {
-              Authorization: `Bearer ${token}`, // Sertakan token dalam header
-              "Content-Type": "multipart/form-data", // Tentukan jenis konten
-            },
-          });
-      
-          console.log("Response data from backend:", data);
-      
-          // Pastikan respons valid
-          if (!data || !data.data) {
-            throw new Error("Invalid response from server");
-          }
-      
-          // Ambil URL avatar dari respons
-          const avatarLink = data.data; // Karena respons langsung mengandung URL
-      
-          // Mutasi ke state dengan setUSerImage
-          // commit("setUSerImage", avatarLink);
-      
-          return data; // Kembalikan data dari respons
-        } catch (err) {
-          console.error("Error uploading avatar:", err.response ? err.response.data : err.message);
-          throw err; // Pastikan error dibuang kembali agar dapat ditangani di tempat lain
-        }
-      },            
-      
-    },
-  };
+        return data;  // Return data hasil upload
+      } catch (err) {
+        console.error("Error upload avatar:", err.response ? err.response.data : err.message);
+        throw err;
+      }
+    },            
+  },
+};

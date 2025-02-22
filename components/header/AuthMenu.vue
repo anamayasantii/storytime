@@ -1,13 +1,13 @@
 <template>
   <div class="header__auth flex justify-start items-center">
     <!-- Tombol Register -->
-     <NuxtLink v-if="!isLoggedIn" to="/SignupPage">
+     <NuxtLink v-if="!isLoggedIn" to="/signup">
       <button class="btn btn-register">
         Sign Up
       </button>
     </NuxtLink>
 
-    <NuxtLink v-if="!isLoggedIn" to="/LoginPage">
+    <NuxtLink v-if="!isLoggedIn" to="/login">
     <!-- Tombol Login -->
     <button class="btn btn-login">
       Login

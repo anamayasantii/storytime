@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     transpile: ['vuex'],
   },
   css: ['@/assets/css/tailwind.css'],
+  plugins: ['@/plugins/ckeditor.client.ts'],
   postcss: {
     plugins: {
       tailwindcss: {},

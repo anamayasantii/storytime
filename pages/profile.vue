@@ -53,101 +53,55 @@
           </div>
         </div>
 
-        <div
-          class="card text-center mx-auto ml-14 mt-3 bg-white rounded-lg border-solid border-2 border-gray overflow-hidden"
-        >
+        <div class="card text-center mx-auto ml-14 mt-3 bg-white rounded-lg border-solid border-2 border-gray overflow-hidden">
           <!-- Konten -->
           <div class="p-4">
-            <h2 class="text-xl font-semibold text-gray-800">
-              Write your story
-            </h2>
+            <h2 class="text-xl font-semibold text-gray-800">Write your story</h2>
             <p class="text-gray-600 mt-2">
-              Share your unique voice with the world – start writing your story
-              today!
+              Share your unique voice with the world – start writing your story today!
             </p>
-            <NuxtLink to="CreateStory">
-            <button
-              class="btnstory mt-4 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600">
-              Write story
-            </button>
-          </NuxtLink>
+            <NuxtLink to="create-story">
+              <button class="btnstory mt-4 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600">
+                Write story
+              </button>
+            </NuxtLink>
           </div>
         </div>
       </div>
 
       <!-- Kolom Kanan -->
-      <div
-        v-if="activeTab === 'myStory'"
-        class="text-center w-2/3 pt-10 flex-grow overflow-auto">
-        <!-- <h2 class="text-xl font-semibold text-gray-800">No stories yet</h2>
-        <p class="text-gray-600 mt-2">
-          You haven't shared any stories yet. Start your fitness journey today!
-        </p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-          <img
-            src="@/assets/images/vectorprofile.svg"
-            alt="Centered Image"
-            class="w-64 h-auto"
-          />
-        </div> -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-20 mr-10">
-          <div
-            v-for="story in storyList"
-            :key="story.id"
-            class="flex justify-center"
-            v-if="storyList.length > 0"
-          >
-            <CreateList :story="story" />
+      <div v-if="activeTab === 'myStory'" class="text-center w-2/3 pt-10 flex-grow overflow-auto">
+        <div v-if="!isLoading && storyList.length === 0">
+          <h2 class="text-xl font-semibold text-gray-800">No stories yet</h2>
+          <p class="text-gray-600 mt-2">You haven't shared any stories yet. Start your fitness journey today!</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+            <img src="@/assets/images/vectorprofile.svg" alt="Centered Image" class="vector w-64 h-auto" />
           </div>
         </div>
-        <!-- <p v-else class="text-center text-gray-500">Belum ada cerita yang dibuat.</p> -->
+
+        <div v-if="!isLoading && storyList.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-20 mr-10">
+          <div v-for="story in storyList" :key="story.id" class="flex justify-center">
+            <CreateList :story="story" @storyDeleted="handleStoryDeleted" />
+          </div>
+        </div>
       </div>
 
-      <!-- <div
-        v-if="activeTab === 'bookmark'"
-        class="text-center w-2/3 pt-10 flex-grow overflow-auto"> -->
-        <!-- <h2 class="text-xl font-semibold text-gray-800">No bookmarks yet</h2>
-        <p class="text-gray-600 mt-2">
-          You haven't saved any bookmarks yet. Explore and bookmark your top
-          workouts!
-        </p>
-        <div class="flex justify-center mb-4">
-          <img
-            src="@/assets/images/vectorbookmark.svg"
-            alt="Centered Image"
-            class="w-64 h-auto"
-          />
-        </div> -->
-        <!-- <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6 mb-20">
-          <div
-            v-for="story in storyList.slice(0,5)"
-            :key="story.id"
-            class="flex justify-center">
-            <BookmarkList :story="story" />
+      <div v-if="activeTab === 'bookmark'" class="text-center w-2/3 pt-10 flex-grow overflow-auto">
+        <div v-if="!isLoading && Array.isArray(bookmarks) && bookmarks.length === 0">
+          <h2 class="text-xl font-semibold text-gray-800">No bookmarks yet</h2>
+          <p class="text-gray-600 mt-2">You haven't saved any bookmarks yet. Start exploring and bookmark your favorite stories!</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+            <img src="@/assets/images/vectorbookmark.svg" alt="Centered Image" class=" vector w-64 h-auto" />
           </div>
-        </div> -->
-        <div v-if="activeTab === 'bookmark'" class="text-center w-2/3 pt-10 flex-grow overflow-auto">
-          <div v-if="!isLoading && bookmarks.length === 0">
-            <h2 class="text-xl font-semibold text-gray-800">No stories yet</h2>
-              <p class="text-gray-600 mt-2">
-                You haven't shared any stories yet. Start your fitness journey today!
-              </p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
-                <img
-                  src="@/assets/images/vectorprofile.svg"
-                  alt="Centered Image"
-                  class="w-64 h-auto"
-                />
-            </div>
-          </div>
+        </div>
 
-          <div v-if="!isLoading && bookmarks.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mt-6 mb-20">
-            <div v-for="bookmark in bookmarks" :key="bookmark.id" class="flex justify-center">
-              <BookmarkList :story="bookmark.story" /> <!-- Menampilkan data story dari bookmark -->
-            </div>
+        <div v-if="!isLoading && bookmarks.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mt-6 mb-20">
+          <div v-for="bookmark in bookmarks" :key="bookmark.id" class="flex justify-center">
+            <BookmarkList :story="bookmark.story" />
           </div>
         </div>
-        </div>
+      </div>
+    </div>
     <!-- </div> -->
 
     <!-- Modal Profile -->
@@ -160,10 +114,9 @@
           <h3>Edit Profile</h3>
           <!-- Profile Picture Section -->
           <div class="flex items-center space-x-4">
-            <img
-              :src="userData.image || previewImage"
-              alt="Profile Picture"
-              class="profile-pic"
+            <img :src="previewImage || userData.image" 
+            alt="Profile Picture" 
+            class="profile-pic" 
             />
             <button @click="triggerFileInput" class="button px-4 py-2 rounded">
               Change Picture
@@ -244,6 +197,8 @@ import { useStore } from "vuex";
 import CreateList from "~/components/books/CreateList.vue";
 import BookmarkList from "~/components/books/BookmarkList.vue";
 import axios from 'axios';
+import { useRouter } from 'vue-router';
+import Cookies from 'js-cookie';
 
 const activeTab = ref("myStory");
 const showModal = ref(false);
@@ -277,14 +232,10 @@ const user = reactive({
 onMounted(async () => {
   try {
     await store.dispatch('auth/getUser');
-    console.log('User Data after fetch:', userData.value); // Debugging
   } catch (error) {
     console.error('Failed to fetch user data:', error);
   }
 });
-
-console.log('Image URL:', userData.image);
-console.log('userData:', userData);
 
 const updateProfile = async () => {
   try {
@@ -312,18 +263,49 @@ const updateProfile = async () => {
 
     const response = await store.dispatch("auth/updateProfile", updatedData);
 
+    // if (response) {
+    //   userData.value = { ...response.user };
+    //   closeModal();
+    // }
+
     if (response) {
       userData.value = { ...response.user };
+      if (avatarUrl) {
+        userData.value.image = avatarUrl; // Perbarui image di frontend
+      }
+      previewImage.value = null; // Reset preview agar kembali ke data asli dari backend
       closeModal();
     }
+
   } catch (error) {
     console.error("Failed to update profile:", error.message);
   }
 };
 
-if (!token.value) {
-  navigateTo('/LoginPage');
-}
+const router = useRouter();
+
+onMounted(() => {
+  token.value = Cookies.get('jwt'); // Ambil token dari Cookies setelah reload
+
+  if (!token.value) {
+    router.push('/login'); // Jika token tidak ada, pindah ke login
+  } 
+});
+
+// function handleFileUpload(event) {
+//   const file = event.target.files[0];
+//   if (file) {
+//     // Preview Image
+//     const reader = new FileReader();
+//     reader.onload = (e) => {
+//       previewImage.value = e.target.result;
+//     };
+//     reader.readAsDataURL(file);
+
+//     // Simpan file untuk diunggah
+//     uploadedFile.value = file;
+//   }
+// };
 
 function handleFileUpload(event) {
   const file = event.target.files[0];
@@ -339,13 +321,11 @@ function handleFileUpload(event) {
     uploadedFile.value = file;
   }
 };
-console.log('GAMBARRRR URLLLLLLLLLLLLLLLLLL:', userData.image);  // Debugging
 
 onMounted(async () => {
   try {
     const result = await store.dispatch("story/getStoryDataUser"); // Panggil action khusus user
     storyList.value = result; // Pastikan hanya data milik user yang masuk
-    console.log(storyList.value, "INI DATA STORY USER YANG LOGIN SAJA");
   } catch (error) {
     console.log(error);
   }
@@ -354,21 +334,27 @@ onMounted(async () => {
 const storyList = ref([]);
 
 const bookmarks = ref([]); // Untuk menyimpan data bookmark
-const isLoading = ref(false); // Untuk menampilkan loading saat data sedang diambil
+const isLoading = ref(true); // Untuk menampilkan loading saat data sedang diambil
 
 // Fungsi untuk mengambil data bookmark
-const fetchBookmarks = async () => {
+const getDataBookmark = async () => {
   isLoading.value = true;
   try {
-    const response = await axios.get('http://159.203.137.163/api/bookmark-user', {
+    const response = await axios.get('http://157.245.193.94/api/bookmark-user', {
       headers: {
         Authorization: `Bearer ${token.value}`, // Menambahkan token di header untuk autentikasi
       },
     });
-    bookmarks.value = response.data.data.data; // Menyimpan data bookmarks yang diterima
-    console.log("INI DATA BOOKKK MARKKKKKKKKKK", bookmarks.value);
+
+    // Pastikan data yang diterima benar-benar array
+    if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+      bookmarks.value = response.data.data.data; // Menyimpan data bookmarks yang diterima
+    } else {
+      bookmarks.value = []; // Set kosong jika responsenya tidak sesuai
+    }
   } catch (error) {
     console.error('Error fetching bookmarks:', error);
+    bookmarks.value = []; // Pastikan bookmarks tetap array kosong jika terjadi error
   } finally {
     isLoading.value = false;
   }
@@ -376,15 +362,22 @@ const fetchBookmarks = async () => {
 
 onMounted(() => {
   if (token.value) {
-    fetchBookmarks(); // Mengambil data bookmark setelah komponen dimuat
+    getDataBookmark(); // Mengambil data bookmark setelah komponen dimuat
   } else {
     // Redirect ke halaman login jika tidak ada token
     window.location.href = '/login';
   }
 });
+
+const handleStoryDeleted = (deletedStoryId) => {
+  storyList.value = storyList.value.filter(story => story.id !== deletedStoryId);
+};
 </script>
 
 <style scoped>
+.vector {
+  margin-left: 300px;
+}
 .bgprofile {
   background-color: #f0f5ed;
 }

@@ -23,38 +23,53 @@
       </div>
 
       <div>
-        <base-input
+        <!-- <base-input
           type="textarea"
           v-model="storyData.content"
           placeholder="Enter a story content"
           label="Story Content"
-        />
+        /> -->
+
+        <client-only>
+        <RichEditor :model-value="storyData.content" @update:modelValue="storyData.content = $event" />
+      </client-only>
       </div>
 
-      <!-- Cover Image -->
-      <div class="cover-image mb-10">
+      <!-- Cover Upload -->
+      <div class="cover-image mb-6">
         <base-input
+          id="cover-image"
           type="file"
           label="Cover Story"
-          multiple
-          @change="handleImageUpload"
+          accept="image/*"
+          @change="handleCoverUpload"
         />
-        
-        <!-- Preview existing and new images -->
-        <div v-if="storyData.coverPreviews?.length > 0" class="mt-4 flex flex-wrap gap-4">
-          <div v-for="(image, index) in storyData.coverPreviews" :key="index" class="relative">
-            <img
-              :src="image"
-              class="w-32 h-32 object-cover rounded-md shadow-md"
-            />
-            <button @click="removeImage(index)" class="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1">❌</button>
+        <div v-if="storyData.coverPreview" class="mt-4 relative">
+          <img :src="storyData.coverPreview" class="w-32 h-32 object-cover rounded-md shadow-md" />
+        </div>
+      </div>
+
+      <!-- Images Upload (Multiple, Maks 3) -->
+      <div class="story-images mb-6">
+        <base-input
+          id="story-images"
+          type="file"
+          label="Story Images (Max 3)"
+          accept="image/*"
+          multiple
+          @change="handleImagesUpload"
+        />
+        <div v-if="storyData.imagePreviews.length" class="mt-4 flex flex-wrap gap-4">
+          <div v-for="(image, index) in storyData.imagePreviews" :key="index" class="relative">
+            <img :src="image" class="w-32 h-32 object-cover rounded-md shadow-md" />
+            <button type="button" @click="removeImage(index)" class="absolute top-0 right-0 bg-red-500 text-white px-2 py-1 text-xs rounded-full">X</button>
           </div>
         </div>
       </div>
 
       <!-- Action Buttons -->
       <div class="flex justify-end space-x-4">
-        <NuxtLink to="/ProfilePage">
+        <NuxtLink to="/profile">
           <button class="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300">
             Cancel
           </button>
@@ -80,28 +95,28 @@ import Cookies from "js-cookie";
 const store = useStore();
 const route = useRoute();
 const router = useRouter();
+const baseUrl = "http://157.245.193.94/api/"
 
-const storyId = route.params.id; // Ambil storyId dari route
+const storyId = route.params.id; 
 const categoriesData = ref([]);
 const storyData = reactive({
   title: "",
   category_id: "",
   content: "",
-  cover: [], // Cover baru yang akan diunggah
-  coverPreviews: [], // Preview gambar baru
-  deletedImages: [], // Menyimpan gambar yang ingin dihapus
+  cover: null,
+  coverPreview: "",
+  images: [],
+  imagePreviews: [],
 });
 
 onMounted(async () => {
   try {
-    // Ambil kategori
     const result = await store.dispatch("story/getCategoryData");
     categoriesData.value = result;
 
-    // Ambil data cerita berdasarkan storyId
     const token = Cookies.get("jwt");
     const { data } = await axios.get(
-      `http://159.203.137.163/api/story/${storyId}`,
+      baseUrl +  `story/${storyId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -111,92 +126,73 @@ onMounted(async () => {
       storyData.title = data.data.title;
       storyData.category_id = data.data.category_id;
       storyData.content = data.data.content;
-      storyData.coverPreviews = data.data.images || []; // Simpan URL cover yang sudah ada
+      storyData.coverPreview = data.data.cover || "";
+      storyData.imagePreviews = data.data.images.slice(0, 3) || [];
     }
   } catch (error) {
     console.error("Error loading story data:", error);
   }
 });
 
-const handleImageUpload = (event) => {
+const handleCoverUpload = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    storyData.cover = file;
+    storyData.coverPreview = URL.createObjectURL(file);
+  }
+};
+
+const removeCover = () => {
+  storyData.cover = null;
+  storyData.coverPreview = "";
+};
+
+const handleImagesUpload = (event) => {
   const files = Array.from(event.target.files);
-  if (!storyData.cover) {
-    storyData.cover = [];
-    storyData.coverPreviews = [];
+  if (files.length + storyData.imagePreviews.length > 3) {
+    alert("Maksimal 3 gambar untuk images!");
+    return;
   }
 
-  storyData.cover.push(...files);
-  const newPreviews = files.map((file) => URL.createObjectURL(file));
-  storyData.coverPreviews.push(...newPreviews);
+  const newImages = files.slice(0, 3 - storyData.imagePreviews.length);
+  storyData.images = [...storyData.images, ...newImages];
+  storyData.imagePreviews = [...storyData.imagePreviews, ...newImages.map(file => URL.createObjectURL(file))];
 };
 
 const removeImage = (index) => {
-  const imageToRemove = storyData.coverPreviews[index];
-
-  if (imageToRemove.startsWith("http")) {
-    // Hanya tandai gambar lama sebagai dihapus agar tidak dikirim saat update
-    storyData.deletedImages.push(imageToRemove);
-  } else {
-    // Jika gambar baru, hapus dari daftar cover
-    const fileIndex = storyData.cover.findIndex(file =>
-      URL.createObjectURL(file) === imageToRemove
-    );
-    if (fileIndex !== -1) {
-      storyData.cover.splice(fileIndex, 1);
-    }
-  }
-
-  // Hapus dari preview tampilan
-  storyData.coverPreviews.splice(index, 1);
+  storyData.imagePreviews.splice(index, 1);
+  storyData.images.splice(index, 1);
 };
 
-const upImage = async (files, token) => {
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append("files[]", file);
-  });
-
-  try {
-    const { data } = await axios.post(
-      "http://159.203.137.163/api/upload",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-    return data?.status === 200 ? data.data : null;
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    return null;
-  }
-};
 
 const updateStory = async () => {
   try {
     const token = Cookies.get("jwt");
+    let coverUrl = storyData.coverPreview;
+    let imageUrls = storyData.imagePreviews.filter(url => url.startsWith("http"));
 
-    // Filter hanya gambar yang tidak dihapus
-    let urls = storyData.coverPreviews.filter(
-      (url) => url.startsWith("http") && !storyData.deletedImages.includes(url)
-    );
+    // Upload cover jika ada perubahan
+    if (storyData.cover) {
+      const uploadedCover = await upImage([storyData.cover], token);
+      coverUrl = uploadedCover.length ? uploadedCover[0] : coverUrl;
+    }
 
-    if (storyData.cover.length > 0) {
-      const uploadedUrls = await upImage(storyData.cover, token);
-      urls = [...urls, ...uploadedUrls];
+    // Upload multiple images
+    if (storyData.images.length > 0) {
+      const uploadedImages = await upImage(storyData.images, token);
+      imageUrls = [...imageUrls, ...uploadedImages].slice(0, 3);
     }
 
     const payload = {
       title: storyData.title,
       category_id: storyData.category_id,
       content: storyData.content,
-      images: urls, // Hanya gambar yang tersisa setelah dihapus
+      cover: coverUrl,
+      images: imageUrls.length > 0 ? imageUrls : [],
     };
 
     const { data } = await axios.put(
-      `http://159.203.137.163/api/story/${storyId}`,
+      baseUrl + `story/${storyId}`,
       payload,
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -205,7 +201,7 @@ const updateStory = async () => {
 
     if (data?.status === 200) {
       alert("Berhasil memperbarui story!");
-      router.push("/ProfilePage");
+      router.push("/profile");
     } else {
       alert("Gagal memperbarui story");
     }
@@ -213,6 +209,38 @@ const updateStory = async () => {
     console.error("Error updating story:", err.response?.data || err.message);
   }
 };
+
+// Fungsi upload gambar ke API
+const upImage = async (files, token) => {
+  const formData = new FormData();
+  files.forEach((file) => formData.append("files[]", file));
+
+  try {
+    const { data } = await axios.post(baseUrl + "upload", formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    // Menangani berbagai kemungkinan format respons dari API
+    if (data?.status === 200) {
+      if (Array.isArray(data.data)) {
+        return data.data; // Jika API mengembalikan array langsung
+      } else if (typeof data.data === "string") {
+        return [data.data]; // Jika API hanya mengembalikan satu URL sebagai string
+      } else if (data.data?.urls) {
+        return data.data.urls; // Jika API mengembalikan objek dengan properti `urls`
+      }
+    }
+
+    return []; // Jika respons tidak sesuai harapan, kembalikan array kosong
+  } catch (err) {
+    console.error("Error uploading images:", err.response?.data || err.message);
+    return [];
+  }
+};
+
 </script>
 
 <style scoped>

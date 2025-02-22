@@ -44,7 +44,7 @@
 
           <!-- Kotak Kanan digabungkan -->
           <div class="col-span-2 lg:col-span-2 mt-7">
-            <p class="text-gray-700 leading-relaxed break-words whitespace-pre-line">{{ story.content }}</p>
+            <div class="text-gray-700 leading-relaxed break-words whitespace-pre-line" v-html="story.content"></div>
           </div>
         </div>
       </div>
@@ -77,7 +77,7 @@ import StoryList from "~/components/books/StoryList.vue";
 import SlideImage from "~/components/SlideImage.vue";
 
 // API Base URL
-const baseUrl = "http://159.203.137.163";
+const baseUrl = "http://157.245.193.94";
 
 // Router
 const route = useRoute();

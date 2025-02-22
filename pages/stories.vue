@@ -27,14 +27,13 @@
     <div class="flex justify-between w-full px-4 md:px-20 py-5">
       <div class="flex justify-between w-1/3">
         <!-- Sort Dropdown -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 ">
           <label for="sort-by">Sort By</label>
-          <select v-model="sortByWithOrder" @change="updateSorting" class="font-bold border-none outline-none focus:ring-0">
-            <option value="created_at-desc">Newest</option>
-            <option value="created_at-asc">Oldest</option>
-            <option value="title-asc">A-Z</option>
-            <option value="title-desc">Z-A</option>
-            <option value="bookmarks_count-desc">Popular</option>
+          <select v-model="selectedSort" @change="sortedStories" class="font-bold">
+            <option value="newest">Newest</option>
+            <option value="popular">Popular</option>
+            <option value="az">A-Z</option>
+            <option value="za">Z-A</option>
           </select>
         </div>
 
@@ -70,7 +69,7 @@
     <!-- Book List -->
     <div class="w-full max-w-screen-xl mx-auto">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10 mr-20 ml-20">
-        <div v-for="story in paginatedStories" :key="story.id">
+        <div v-for="story in sortedStories" :key="story.id">
           <BookList :story="story" />
         </div>
       </div>
@@ -141,21 +140,6 @@ const filteredStories = computed(() => {
     );
   }
 
-  // Sorting berdasarkan sortBy dan sortOrder
-  filtered.sort((a, b) => {
-    let aValue = a[sortBy.value];
-    let bValue = b[sortBy.value];
-
-    if (sortBy.value === "created_at") {
-      aValue = new Date(aValue);
-      bValue = new Date(bValue);
-    }
-
-    if (aValue < bValue) return sortOrder.value === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortOrder.value === "asc" ? 1 : -1;
-    return 0;
-  });
-
   return filtered;
 });
 
@@ -198,15 +182,39 @@ const updateSearchQuery = () => {
   router.push({ query: { ...route.query, search: searchQuery.value || undefined } });
 };
 
-const sortBy = ref("created_at"); // Default: newest
-const sortOrder = ref("desc"); // Default: descending
-const sortByWithOrder = ref("created_at-desc"); // Default: Newest
+const popularStories = ref([]);
 
-const updateSorting = () => {
-  const [field, order] = sortByWithOrder.value.split("-");
-  sortBy.value = field;
-  sortOrder.value = order;
+const fetchPopularStories = async () => {
+  try {
+    const stories = await store.dispatch("story/getPopularStories");
+    popularStories.value = stories;
+  } catch (error) {
+    console.error("Error fetching popular stories:", error);
+  }
 };
+
+onMounted(() => {
+  fetchStoriesAndCategories();
+  fetchPopularStories(); // Ambil data cerita populer
+});
+
+const selectedSort = ref("newest");
+
+const sortedStories = computed(() => {
+  if (selectedSort.value === "popular") {
+    return popularStories.value; // Jika "Popular" dipilih, tampilkan cerita populer
+  }
+
+  let sorted = [...paginatedStories.value]; // Salin array agar tidak mengubah aslinya
+
+  if (selectedSort.value === "az") {
+    sorted.sort((a, b) => a.title.localeCompare(b.title));
+  } else if (selectedSort.value === "za") {
+    sorted.sort((a, b) => b.title.localeCompare(a.title));
+  }
+
+  return sorted;
+});
 </script>
 
 
